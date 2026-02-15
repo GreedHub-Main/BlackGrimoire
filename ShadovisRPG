@@ -1,0 +1,644 @@
+-- Wait for game
+repeat task.wait() until game:IsLoaded()
+repeat task.wait() until game.Players.LocalPlayer
+
+-- Destroy old Rayfield if exists
+pcall(function()
+for _, v in pairs(game.CoreGui:GetChildren()) do
+if v.Name == "Rayfield" then
+v:Destroy()
+end
+end
+end)
+
+-- Load Rayfield
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Window = Rayfield:CreateWindow({
+Name = "Shadovis RPG",
+LoadingTitle = "GreedHub",
+LoadingSubtitle = "Full System",
+ConfigurationSaving = {
+Enabled = true,
+FolderName = "ShadovisRPG",
+FileName = "Config"
+}
+})
+
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+
+
+---
+
+-- TABS
+
+local AutoFarmTab = Window:CreateTab("Auto Farm", 4483362458)
+local AutoTab = Window:CreateTab("Auto(s)", 4483362458)
+local ShopTab = Window:CreateTab("Shop(s)", 4483362458)
+local TeleportTab = Window:CreateTab("Teleport(s)", 4483362458)
+local UIsTab = Window:CreateTab("UIs", 4483362458)
+local MissionsTab = Window:CreateTab("Missions", 4483362458)
+
+
+---
+
+-- AUTO(S) TAB (ATTACKS ONLY)
+
+AutoTab:CreateToggle({
+Name = "Auto Attack (SeaKing Dawoopa)",
+CurrentValue = false,
+Callback = function(Value)
+local char = player.Character
+if not char then return end
+local remote = char:FindFirstChild("Combat") and char.Combat:FindFirstChild("RemoteEvent")
+if not remote then return end
+
+if Value then  
+		remote:FireServer("Input", "Seaking Dawoopa", 0, "Breath")  
+	else  
+		remote:FireServer("Input", "Seaking Dawoopa", 4, "BreathCancel")  
+	end  
+end
+
+})
+
+local holding = false
+
+AutoTab:CreateToggle({
+Name = "Hold Everender Slash",
+CurrentValue = false,
+Callback = function(Value)
+holding = Value
+if holding then
+task.spawn(function()
+while holding do
+local char = player.Character
+if char then
+local remote = char:FindFirstChild("Combat") and char.Combat:FindFirstChild("RemoteEvent")
+if remote then
+remote:FireServer("Input","Everender",0.3333333333333333,"Slash")
+end
+end
+task.wait(0.3)
+end
+end)
+end
+end
+})
+
+
+---
+
+-- SHOPS (UNCHANGED)
+
+local shops = {"Christmas","Depths","Dragon","Epic","Halloween","Legendary","Sky","Void"}
+table.sort(shops)
+
+for _, shop in ipairs(shops) do
+ShopTab:CreateButton({
+Name = shop.." Shop",
+Callback = function()
+ReplicatedStorage:WaitForChild("RemoteEvent"):FireServer("ShopPrompt", shop)
+end
+})
+end
+
+
+---
+
+-- TELEPORT TAB
+
+local teleportData = {
+	"Abandoned Knight Lv 700000",
+	"Abyss Master Lv 666De",
+	"Agnar, Revoked Captain of the Dracoknights Lv 125Sx",
+	"Aguman Lv 20",
+	"Aguman Lv 20000",
+	"Aleph, Master of the Blind Lv 7500",
+	"Almighty Fisherman Lv 99999",
+	"Almighty Ghost Lv 30Sx",
+	"Almighty Ghost Lv 70Sx",
+	"Alpha Biograft Delver Lv 411Qn",
+	"Alpha Biograft Delver Lv 97Qn",
+	"Alphas Lv 7Ud",
+	"Amos, Priest of the Forgone Lv 666Sx",
+	"Ancient Wanderer Lv 10.0Sp",
+	"Angel Statue Lv 1",
+	"Aqua Mage Lv 85000",
+	"Arcane Stone Knight Lv 450",
+	"Arcane Stone Knight Lv 525",
+	"Archduke of the Federation Lv 8DD",
+	"Archer of Artemis Lv 85000",
+	"Armored Barbarian Lv 80",
+	"Assassin of the Silent Abyss Lv 19Qd",
+	"Assassin of the Silent Abyss Lv 25T",
+	"Athenian Merchant Lv 400",
+	"Athenian Villager Lv 2000",
+	"Athenian Warrior Lv 1100",
+	"Athenian Warrior Lv 1500",
+	"Athenian Warrior Lv 900",
+	"Aureus, The Great Lv 7.77N",
+	"Aureus, The Tarnished Lv 10000000",
+	"Azure Prisoner Lv 200N",
+	"Azure Prisoner Lv 300N",
+	"Azure Prisoner Lv 600N",
+	"Azure Prisoner Lv 700N",
+	"Azure Samurai Lv 3.75B",
+	"Azurewrath Demon Lv 2.65B",
+	"Azurewrath, Lord of the Frost Lv 5B",
+	"Bandit Chief Lv 7",
+	"Baron Voidling Lv 300B",
+	"Baron Voidling Lv 400B",
+	"Baron Voidling Lv 700B",
+	"Basal Demon Lv 20N",
+	"Basal Demon Lv 5N",
+	"Basal Knight Lv 10De",
+	"Basal Knight Lv 300De",
+	"Basal Knight Lv 40De",
+	"Basal Knight Lv 6.99De",
+	"Basal Knight Lv 80De",
+	"Basal Knight Lv 8De",
+	"Basalt Barbarian Lv 375",
+	"Basalt Barbarian Lv 425",
+	"Basalt Barbarian Lv 500",
+	"Basalt Barbarian Lv 625",
+	"Basalt Blader Lv 625",
+	"Basalt Demon Lv 999",
+	"Berserker Lv 22",
+	"Berserker Lv 50",
+	"Berserker Lv 60",
+	"Berserker Lv 7",
+	"Berserker Lv 70",
+	"Berserker Lv 90",
+	"Berserker Master Lv 125",
+	"Black Iron Invader Lv 60",
+	"Bluesteel Commander Lv 60",
+	"Bluesteel Sage Lv 80",
+	"Bluesteel Vanguard, Domine Lv 70000",
+	"Bombastic Ninja Lv 6.75B",
+	"Bombastic Ninja Lv 9.75B",
+	"Bone Harvester Lv 5000",
+	"Bone Harvester Lv 75",
+	"Boulder Sage Lv 20B",
+	"Bunny Lv 3",
+	"Bunny Lv 6",
+	"Cardinal of Poseidon Lv 4000000",
+	"Cardinal of Treasure Lv 2000000",
+	"Castle Bandit Lv 40",
+	"Castle Bandit Lv 60",
+	"Castle Bandit Lv 70",
+	"Castle Knight Lv 100",
+	"Catseye Deity Lv 100",
+	"Cellar Vampire Lv 160Ud",
+	"Cellar Vampire Lv 320Ud",
+	"Cellar Vampire Lv 70Ud",
+	"Cerulean Ozymandias Lv 4650000",
+	"Chad Barbarian Lv 70",
+	"Champion of Azurewrath Lv 200M",
+	"Chronobonum, Everangel Lv 10T",
+	"Chronobonum, Everangel Lv 10Ud",
+	"Clan Bruiser Lv 8000",
+	"Clan Bruiser Lv 8250",
+	"Clan Bruiser Lv 8500",
+	"Clan Bruiser Lv 8750",
+	"Clan Disciple Lv 6500",
+	"Clan Disciple Lv 7000",
+	"Clan Don Lv 10000",
+	"Clan Prince Lv 9000",
+	"Cloaked Deity Lv 1000",
+	"Cloud Blader Lv 140",
+	"Cloud Blader Lv 140M",
+	"Constable Aryx Lv 9DD",
+	"Corrupted Angel Lv 1375000",
+	"Councillor of Amos Lv 24.9Sx",
+	"Councillor of Amos Lv 31.0Sx",
+	"Court Assassin Lv 9Ud",
+	"Crimson Dragoon Lv 100B",
+	"Crimson Ozymandias Lv 4650000",
+	"Crimson Void Knight Lv 75000000",
+	"Crimson Void Knight Lv 95000000",
+	"Crimson Warlord Lv 4000000",
+	"Crimsonwrath, Master of Rage Lv 6000000",
+	"Cthulhu Lv 25Qd",
+	"Cursed Demon Lv 13N",
+	"Cursed Demon Lv 89.9N",
+	"Cvezkly, Scion of Matter Lv 10T",
+	"Cyber Soldier Lv 1.5De",
+	"Cyber Soldier Lv 650N",
+	"Cyber Soldier Lv 850N",
+	"Cyber Soldier Lv 8De",
+	"Damos, Guardian of Misfortune Lv 500000",
+	"Darkseed Rampart Lv 100",
+	"Deity of Eyes Lv 80",
+	"Denizen of Plague Lv 170B",
+	"Depths Fiend Lv 100000",
+	"Desert Knight Lv 19",
+	"Desert Knight Lv 23",
+	"Desert Knight Lv 29",
+	"Desert Knight Lv 31",
+	"Desert Merchant Lv 29",
+	"Disgraced Merman Lv 2N",
+	"Disgraced Merman Lv 8N",
+	"Domino Lv 100",
+	"Dracoknight Brutus Lv 180M",
+	"Dracoknight Brutus Lv 380M",
+	"Dracoknight of Glaurung Lv 120M",
+	"Dracoknight of Glaurung Lv 320M",
+	"Dracoknight of Smaug Lv 100M",
+	"Dracoknight of Smaug Lv 300M",
+	"Dragoon Lv 1B",
+	"Druid of the Wind Lv 5800",
+	"Dwelling Reaver Lv 375000",
+	"Earth Champion Lv 4200",
+	"Earth Disciple Lv 1800",
+	"Earth Disciple Lv 1900",
+	"Earth Disciple Lv 2000",
+	"Earth Disciple Lv 2100",
+	"Earth Disciple Lv 2350",
+	"Earth Disciple Lv 2450",
+	"Earth Disciple Lv 2550",
+	"Earth Disciple Lv 2650",
+	"Earth Disciple Lv 2750",
+	"Eccentric Explorer Lv 200Sp",
+	"Eerie Jester Lv 20T",
+	"Eerie Jester Lv 2Qd",
+	"Effigy of Kleos Lv 100M",
+	"Ehalios, Master of Viridian Lv 1200000",
+	"Empyrean Astronomer Lv 50000",
+	"Empyrean Minstrel Lv 50000",
+	"Empyrean Minstrel Lv 75000",
+	"Empyreus Lv 1000000",
+	"Envoy of Gluttony Lv 2T",
+	"Erikson Lv 1.65B",
+	"Farm Boy Lv 16",
+	"Final Knight of the Silent Abyss Lv 2Ud",
+	"Fire Clan Hillfighter Lv 650M",
+	"Fisherman Lv 0",
+	"Flame Champion Lv 3300",
+	"Flame Disciple Lv 1000",
+	"Flame Disciple Lv 1100",
+	"Flame Disciple Lv 1200",
+	"Flame Disciple Lv 1300",
+	"Flame Disciple Lv 1400",
+	"Flame Disciple Lv 600",
+	"Flame Disciple Lv 700",
+	"Flame Disciple Lv 800",
+	"Flame Disciple Lv 900",
+	"Fletch Lv 1.75B",
+	"Forest Clan Hillfighter Lv 650M",
+	"Forgotten Soul, Yorick Lv 14",
+	"Forlorne Executor Lv 975000",
+	"Frost Clan Hillfighter Lv 650M",
+	"Frost Lich Lv 4.5B",
+	"Gamma Crusader Lv 12.5Qn",
+	"Gamma Crusader Lv 3.2Qn",
+	"Gamma Crusader Lv 6.3Qn",
+	"Gamma Lancer Lv 1.3Qn",
+	"Master of the Abyss Lv 5000000",
+	"Master of Oceans Lv 3900",
+	"Master of Oceans Lv 4300",
+	"Master of Oceans Lv 4444",
+	"Master of Sloth Lv 4.5T",
+	"Master of Wind Lv 3000",
+	"Master of Wind Lv 3100",
+	"Master of Wind Lv 3400",
+	"Meddling Soul Lv 40",
+	"Meddling Soul Lv 45",
+	"Meddling Soul Lv 53",
+	"Meddling Soul Lv 58",
+	"Meddling Soul Lv 66",
+	"Meeboid Lv 140B",
+	"Merman Lv 10000",
+	"Merman Lv 12500",
+	"Merman Lv 3500",
+	"Merman Lv 5500",
+	"Merman Soldier Lv 17500",
+	"Merman Soldier Lv 32500",
+	"Mobius, Servant of the Seakings Lv 7500000",
+	"Monk Lv 64",
+	"Monk Lv 6400",
+	"Moon Bunny Lv 60",
+	"Mystic of Destruction Lv 160M",
+	"Mystic of Destruction Lv 460M",
+	"Necromancer Lv 60",
+	"Ocean Champion Lv 4000",
+	"Ocean Champion Lv 4100",
+	"Ocean Champion Lv 4800",
+	"Ocean Champion Lv 6666",
+	"Ocean Delver Lv 560",
+	"Ocean Disciple Lv 3400",
+	"Ocean Disciple Lv 3500",
+	"Ocean Disciple Lv 3600",
+	"Ocean Disciple Lv 3700",
+	"Ocean Emissary Lv 125000",
+	"Ogam, Master of High Earth Lv 30",
+	"Ogre King Lv 15",
+	"Ogre Lv 12",
+	"Ogre Lv 9",
+	"Old Dissident Lv 11Sx",
+	"Old Dissident Lv 5Sx",
+	"Old Mage Lv 1.65B",
+	"Omegas Lv 7Ud",
+	"Pirate Goblin Lv 10",
+	"Pirate Goblin Lv 7",
+	"Pirate Goblin Lv 8",
+	"Poor Villager Lv 15",
+	"Poor Villager Lv 2",
+	"Poor Villager Lv 25",
+	"Poor Villager Lv 25000",
+	"Prisoner of the Mind Lv 150Sp",
+	"Prisoner of the Mind Lv 250Sp",
+	"Prisoner of the Mind Lv 500Sp",
+	"Putridosaurus Lv 53Qd",
+	"Putridosaurus Lv 837Qd",
+	"Rebuked Voidlord Lv 500B",
+	"Rebuked Voidlord Lv 600B",
+	"Red Rogue Lv 1250",
+	"Rotten Merman Lv 115B",
+	"Rotten Merman Lv 45B",
+	"Rotten Merman Lv 65B",
+	"Sage Knight Lv 20",
+	"Sage Knight Lv 80",
+	"Sage Knight Lv 90",
+	"Scythrax, the Sharpest One Lv 199Sx",
+	"Seaking Lv 80000000",
+	"Seaking Lv 800De",
+	"Sealed Golem Lv 75000",
+	"Seer of Contempt Lv 20.0Sp",
+	"Serpent Lv 2000",
+	"Serpent Lv 40",
+	"Servant of Fire Lv 20",
+	"Shadow Assassin Lv 24",
+	"Shadow Assassin Lv 3",
+	"Shadow Assassin Lv 5",
+	"Snowman Lv 10",
+	"Snowman Lv 15",
+	"Snowman Lv 7",
+	"Snowman Lv 8",
+	"Splendor Knight Lv 220B",
+	"Splendor Knight Lv 280B",
+	"Stag of the Abyss Lv 13Qd",
+	"Steel Samurai Lv 2Ud",
+	"Stomag, Guardian of Hatred Lv 5000",
+	"Stone Acolyte Lv 275",
+	"Stone Knight Lv 15000",
+	"Stone Knight Lv 250",
+	"Stone Knight Lv 300",
+	"Stone Knight Lv 350",
+	"Stone Knight Lv 400",
+	"Stone Underling Lv 110",
+	"Stone Underling Lv 130",
+	"Stone Underling Lv 160",
+	"Stone Underling Lv 170",
+	"Stone Underling Lv 225",
+	"Stone Underling Lv 325",
+	"Straw Demon Lv 130",
+	"Straw Demon Lv 80",
+	"Sunken Captain Lv 60000",
+	"Sunken Knight Lv 250000",
+	"Sunken Knight Lv 275000",
+	"Sunken Sniper Lv 13000",
+	"Sunken Sniper Lv 8000",
+	"Sunken Swashbuckler Lv 2500",
+	"Sunken Swashbuckler Lv 4500",
+	"Tarnished Guardia Lv 6Qd",
+	"Tarnished Valkyrie Lv 295000",
+	"The Gladiator Lv 25",
+	"The Knightmare Lv 10B",
+	"The Sheriff Lv 11",
+	"The Silver King Lv 20O",
+	"The Silver King Lv 49.9O",
+	"Thief Lv 2",
+	"Thief Lv 3",
+	"Thief Lv 4",
+	"Thief Lv 5",
+	"Tokus, Viridian Scion Lv 1200000",
+	"Tokus, Viridian Scion Lv 12T",
+	"Toothy Lv 1.25B",
+	"Training Dummy Lv 0",
+	"Training Dummy Lv 10",
+	"Training Dummy Lv 100",
+	"Training Dummy Lv 50",
+	"Treachery Master Lv 700Qd",
+	"Tyrant of Envy Lv 2.5T",
+	"Tyrant of Pride Lv 5T",
+	"Tyrant of Wrath Lv 1T",
+	"Unholy Apparition Lv 1Qd",
+	"Vanguard of Life Lv 200000",
+	"Vespertilio Lv 2.3Sx",
+	"Viking Leader Lv 35",
+	"Viking Lv 15",
+	"Viking Lv 30",
+	"Viking Lv 50",
+	"Viking Lv 60",
+	"Viking Warlord Lv 70",
+	"Viking of True Ice Lv 335",
+	"Vilethorn Eternal Lv 800000",
+	"Villager Lv 1",
+	"Villager Lv 22",
+	"Viridian Eviscerator Lv 300000",
+	"Viridian Eviscerator Lv 600000",
+	"Viridian Master Lv 1560000",
+	"Viridian Sorcerer Lv 300000",
+	"Viridian Sorcerer Lv 450000",
+	"Viridian Sorcerer Lv 500000",
+	"Viridian Vanguard, Domani Lv 900000",
+	"Voidking Lv 900De",
+	"Voidking Lv 900T",
+	"Wind Champion Lv 3400",
+	"Wind Champion Lv 4000",
+	"Wind Champion Lv 5500",
+	"Wind Disciple Lv 2400",
+	"Wind Disciple Lv 2500",
+	"Wind Disciple Lv 2600",
+	"Wind Disciple Lv 2700",
+	"Wind Disciple Lv 2800",
+	"Wind Disciple Lv 2900",
+	"Winter Hunter Lv 16",
+	"Winter Hunter Lv 24",
+	"Winter Hunter Lv 27",
+	"Winter Mage Lv 14",
+	"Winter Nomad Lv 12",
+	"Wizard of Arachnea Lv 6",
+	"Woodland Hunter Lv 4",
+	"Woodland Hunter Lv 7",
+	"XP Goblin Lv 99",
+	"XP Goblin Lv 999",
+	"XP Goblin Lv 9999",
+	"Yvexlorn, Ice Sunderer Lv 25",
+	"Yvexlorn, Ice Sunderer Lv 2500",
+	"clockwork, the Judge of Time Lv 100000",
+}
+
+table.sort(teleportData)
+
+local added = {}
+
+for _, npcName in ipairs(teleportData) do
+	if not added[npcName] then
+		added[npcName] = true
+		TeleportTab:CreateButton({
+			Name = npcName,
+			Callback = function()
+				local char = player.Character
+				if not char then return end
+				local hrp = char:FindFirstChild("HumanoidRootPart")
+				if not hrp then return end
+
+				local npc = workspace.NPCs:FindFirstChild(npcName)
+				if not npc then return end
+
+				local targetHRP = npc:FindFirstChild("HumanoidRootPart")
+				if not targetHRP then return end
+
+				hrp.CFrame = targetHRP.CFrame * CFrame.new(0, 0, -3)
+			end
+		})
+	end
+end
+
+
+---
+
+-- UIS (VISIBLE FIXED)
+
+UIsTab:CreateButton({
+Name = "Crafting UI",
+Callback = function()
+local gui = player:WaitForChild("PlayerGui")
+local interface = gui:WaitForChild("Interface")
+local ui = interface:FindFirstChild("Crafting")
+if ui then
+ui.Visible = true
+end
+end
+})
+
+UIsTab:CreateButton({
+Name = "LevelStow GUI",
+Callback = function()
+local gui = player:WaitForChild("PlayerGui")
+local interface = gui:WaitForChild("Interface")
+local ui = interface:FindFirstChild("LevelStow")
+if ui then
+ui.Visible = true
+end
+end
+})
+
+
+---
+
+-- MISSIONS (UNCHANGED EXACTLY)
+
+local halloween = {
+{Reward={"Hallow's Eve Token",25},Description="Slay 10 Goblins"},
+{Reward={"Hallow's Eve Token",125},Description="Slay 20 Thiefs"},
+{Reward={"Hallow's Eve Token",75},Description="Deal 5,000 Physical Damage"},
+{Reward={"Hallow's Eve Token",200},Description="Stun enemies for 5 seconds total"},
+{Reward={"Hallow's Eve Token",75},Description="Deal 50,000 Magical Damage"},
+{Reward={"Hallow's Eve Token",125},Description="Slay 8 Stag of the Abyss"},
+{Reward={"Hallow's Eve Token",1000},Description="Defeat Empyreus Hallow 1 time in the Halloween event."},
+{Reward={"Hallow's Eve Token",450},Description="Deal 1,000,000 Magical Damage"},
+{Reward={"Hallow's Eve Token",5000},Description="Defeat Empyreus Hallow 3 times in the Halloween event."}
+}
+
+local christmas = {
+{Reward={"Winter's Delight Token",100},Description="Slay 10 Goblins"},
+{Reward={"Winter's Delight Token",125},Description="Penetrate enemy armor 40 times"},
+{Reward={"Winter's Delight Token",100},Description="Block 3 attacks with a Shield"},
+{Reward={"Winter's Delight Token",75},Description="Deal 5000 Physical Damage"},
+{Reward={"Winter's Delight Token",200},Description="Stun enemies for 5 seconds total"},
+{Reward={"Winter's Delight Token",75},Description="Deal 5000 Magical Damage"},
+{Reward={"Winter's Delight Token",125},Description="Restore 5000 health to allies"},
+{Reward={"Winter's Delight Token",75},Description="Deal 1000 True Damage"},
+{Reward={"Winter's Delight Token",250},Description="Defeat Frigidus in his Dungeon."}
+}
+
+table.sort(halloween,function(a,b)return a.Description<b.Description end)
+table.sort(christmas,function(a,b)return a.Description<b.Description end)
+
+MissionsTab:CreateLabel("Halloween")
+for _,q in ipairs(halloween) do
+MissionsTab:CreateParagraph({
+Title="",
+Content="Name: "..q.Description.."\nReward: "..q.Reward[2].." "..q.Reward[1]
+})
+end
+
+MissionsTab:CreateLabel("Christmas")
+for _,q in ipairs(christmas) do
+MissionsTab:CreateParagraph({
+Title="",
+Content="Name: "..q.Description.."\nReward: "..q.Reward[2].." "..q.Reward[1]
+})
+end
+
+
+---
+
+-- MISCELLANEOUS
+
+local MiscTab = Window:CreateTab("Miscellaneous", 4483362458)
+
+local spawnedMaps = {}
+local spawnedEnemies = {}
+
+MiscTab:CreateButton({
+	Name = "Spawn Maps",
+	Callback = function()
+		local source = ReplicatedStorage:FindFirstChild("UnloadedMaps")
+		local dest = workspace:FindFirstChild("Maps")
+		if source and dest then
+			for _, v in ipairs(source:GetChildren()) do
+				local clone = v:Clone()
+				clone.Parent = dest
+				table.insert(spawnedMaps, clone)
+			end
+		end
+	end
+})
+
+MiscTab:CreateButton({
+	Name = "Spawn Enemies",
+	Callback = function()
+		local source = ReplicatedStorage:FindFirstChild("UnloadedEnemies")
+		local dest = workspace:FindFirstChild("NPCs")
+		if source and dest then
+			for _, v in ipairs(source:GetChildren()) do
+				local clone = v:Clone()
+				clone.Parent = dest
+				table.insert(spawnedEnemies, clone)
+			end
+		end
+	end
+})
+
+MiscTab:CreateButton({
+	Name = "Clean Up Maps",
+	Callback = function()
+		for _, v in ipairs(spawnedMaps) do
+			if v and v.Parent then
+				v:Destroy()
+			end
+		end
+		spawnedMaps = {}
+	end
+})
+
+MiscTab:CreateButton({
+	Name = "Clean Up Enemies",
+	Callback = function()
+		for _, v in ipairs(spawnedEnemies) do
+			if v and v.Parent then
+				v:Destroy()
+			end
+		end
+		spawnedEnemies = {}
+	end
+})
+
+Rayfield:LoadConfiguration()
