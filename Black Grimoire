@@ -1,110 +1,386 @@
--- Wait for game
-repeat task.wait() until game:IsLoaded()
-repeat task.wait() until game.Players.LocalPlayer
-
--- Destroy old Rayfield if exists
-pcall(function()
-for _, v in pairs(game.CoreGui:GetChildren()) do
-if v.Name == "Rayfield" then
-v:Destroy()
-end
-end
-end)
-
--- Load Rayfield
+--// Load Rayfield
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-Name = "Shadovis RPG",
-LoadingTitle = "GreedHub",
-LoadingSubtitle = "Full System",
-ConfigurationSaving = {
-Enabled = true,
-FolderName = "ShadovisRPG",
-FileName = "Config"
-}
+    Name = "Black Clover",
+    LoadingTitle = "Black Grimoie",
+    LoadingSubtitle = "by Nyx",
+    ConfigurationSaving = { Enabled = false }
 })
 
--- Services
+--// Tabs
+local AutoFarmTab = Window:CreateTab("Auto Farm")
+local TeleportTab = Window:CreateTab("Teleport")
+local MiscTab = Window:CreateTab("Misc")
+
+--// Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local player = Players.LocalPlayer
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
+local LocalPlayer = Players.LocalPlayer
+local MainRemote = ReplicatedStorage:WaitForChild("MainRemote")
 
----
-
--- TABS
-
-local AutoFarmTab = Window:CreateTab("Auto Farm", 4483362458)
-local AutoTab = Window:CreateTab("Auto(s)", 4483362458)
-local ShopTab = Window:CreateTab("Shop(s)", 4483362458)
-local TeleportTab = Window:CreateTab("Teleport(s)", 4483362458)
-local UIsTab = Window:CreateTab("UIs", 4483362458)
-local MissionsTab = Window:CreateTab("Missions", 4483362458)
-
-
----
-
--- AUTO(S) TAB (ATTACKS ONLY)
-
-AutoTab:CreateToggle({
-Name = "Auto Attack (SeaKing Dawoopa)",
-CurrentValue = false,
-Callback = function(Value)
-local char = player.Character
-if not char then return end
-local remote = char:FindFirstChild("Combat") and char.Combat:FindFirstChild("RemoteEvent")
-if not remote then return end
-
-if Value then  
-		remote:FireServer("Input", "Seaking Dawoopa", 0, "Breath")  
-	else  
-		remote:FireServer("Input", "Seaking Dawoopa", 4, "BreathCancel")  
-	end  
-end
-
-})
-
-local holding = false
-
-AutoTab:CreateToggle({
-Name = "Hold Everender Slash",
-CurrentValue = false,
-Callback = function(Value)
-holding = Value
-if holding then
-task.spawn(function()
-while holding do
-local char = player.Character
-if char then
-local remote = char:FindFirstChild("Combat") and char.Combat:FindFirstChild("RemoteEvent")
-if remote then
-remote:FireServer("Input","Everender",0.3333333333333333,"Slash")
-end
-end
-task.wait(0.3)
-end
+--// Character Cache
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+LocalPlayer.CharacterAdded:Connect(function(char)
+    Character = char
 end)
+
+local function GetCharacter()
+    return Character
 end
+
+--// Flags
+local Flags = {
+    AutoFireBoar = false,
+    AutoSlime = false,
+    AutoThief = false,
+    AutoLicht = false,
+    AutoGolem = false,
+    AutoSGolem = false,
+    AutoWitchQueen = false,
+    SellGolemCore = false,
+    AutoYulsFarm = false
+}
+
+--// Loop Tracking
+local ActiveLoops = {}
+
+--// Helpers
+local function GetRootPart(model)
+    return model:FindFirstChild("HumanoidRootPart")
+        or model:FindFirstChild("UpperTorso")
+        or model:FindFirstChild("Torso")
 end
-})
 
-
----
-
--- SHOPS (UNCHANGED)
-
-local shops = {"Christmas","Depths","Dragon","Epic","Halloween","Legendary","Sky","Void"}
-table.sort(shops)
-
-for _, shop in ipairs(shops) do
-ShopTab:CreateButton({
-Name = shop.." Shop",
-Callback = function()
-ReplicatedStorage:WaitForChild("RemoteEvent"):FireServer("ShopPrompt", shop)
+local function Normalize(str)
+    return string.lower(str):gsub("[%s%p]", "")
 end
-})
+
+--// NPC Folder Cache
+local CachedFolder = nil
+local function GetNPCFolder()
+    if CachedFolder and CachedFolder.Parent then
+        return CachedFolder
+    end
+
+    for _, obj in ipairs(workspace:GetChildren()) do
+        if obj:IsA("Folder") and string.match(obj.Name, "^BadEntities%d+$") then
+            CachedFolder = obj
+            return obj
+        end
+    end
 end
+
+--// Get Targets
+local function GetTargets(npcName)
+    local folder = GetNPCFolder()
+    if not folder then return {} end
+
+    local targets = {}
+    local key = Normalize(npcName)
+
+    for _, v in ipairs(folder:GetChildren()) do
+        if Normalize(v.Name) == key then
+            table.insert(targets, v)
+        end
+    end
+
+    return targets
+end
+
+--// Auto Attack
+local AutoAttacking = false
+
+local function TapAttack()
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+end
+
+local function StartAutoAttack()
+    if AutoAttacking then return end
+    AutoAttacking = true
+
+    task.spawn(function()
+        while AutoAttacking do
+            TapAttack()
+            task.wait(0.1)
+        end
+    end)
+end
+
+local function StopAutoAttack()
+    AutoAttacking = false
+end
+
+local function AnyFarmEnabled()
+    for k, v in pairs(Flags) do
+        if v then
+            return true
+        end
+    end
+    return false
+end
+
+--// Auto Farm Loop
+local function AutoFarmLoop(flagName, npcName)
+    if ActiveLoops[flagName] then return end
+
+    ActiveLoops[flagName] = task.spawn(function()
+        while Flags[flagName] do
+
+            local targets = GetTargets(npcName)
+            if #targets == 0 then task.wait(0.3) continue end
+
+            for _, target in ipairs(targets) do
+                if not Flags[flagName] then break end
+
+                local humanoid = target:FindFirstChildOfClass("Humanoid")
+                local targetPart = GetRootPart(target)
+
+                if not humanoid or not targetPart then continue end
+
+                while Flags[flagName]
+                    and target
+                    and target.Parent
+                    and humanoid.Health > 0 do
+
+                    local char = GetCharacter()
+                    local myHRP = char and char:FindFirstChild("HumanoidRootPart")
+
+                    if myHRP then
+                        if (myHRP.Position - targetPart.Position).Magnitude > 2 then
+                            myHRP.CFrame = targetPart.CFrame * CFrame.new(5, 0, 0)
+                        end
+                        myHRP.Velocity = Vector3.zero
+                    end
+
+                    task.wait(0.05)
+                end
+            end
+
+            task.wait(0.1)
+        end
+
+        ActiveLoops[flagName] = nil
+    end)
+end
+
+local function YulsFarmLoop()
+    if ActiveLoops["YulsFarm"] then return end
+
+    ActiveLoops["YulsFarm"] = task.spawn(function()
+
+        while Flags.AutoYulsFarm do
+
+            -- STATE 1: GOLEM
+            Teleport(NPC_Locations.Golem)
+            task.wait(0.7)
+
+            local enemies = GetEnemies()
+            if enemies then
+                for _, npc in ipairs(enemies:GetChildren()) do
+                    if not Flags.AutoYulsFarm then return end
+
+                    if npc.Name == "Golem" then
+                        Teleport(NPC_Locations.Golem)
+                        task.wait(0.4)
+
+                        local root = GetRootPart(npc)
+                        local hrp = GetHRP()
+
+                        if root and hrp then
+                            hrp.CFrame = root.CFrame * CFrame.new(0, 0, 4)
+                        end
+
+                        WaitDead(npc)
+                    end
+                end
+            end
+
+            -- STATE 2: SECURITY GOLEM
+            Teleport(NPC_Locations["Security Golem"])
+            task.wait(0.7)
+
+            enemies = GetEnemies()
+            if enemies then
+                for _, npc in ipairs(enemies:GetChildren()) do
+                    if not Flags.AutoYulsFarm then return end
+
+                    if npc.Name == "Security Golem" then
+                        Teleport(NPC_Locations["Security Golem"])
+                        task.wait(0.4)
+
+                        local root = GetRootPart(npc)
+                        local hrp = GetHRP()
+
+                        if root and hrp then
+                            hrp.CFrame = root.CFrame * CFrame.new(0, 0, 4)
+                        end
+
+                        WaitDead(npc)
+                    end
+                end
+            end
+
+            task.wait(0.2)
+        end
+
+        ActiveLoops["YulsFarm"] = nil
+    end)
+end
+
+--// PRELOAD SYSTEM
+local NPC_Locations = {
+    AutoSlime = Vector3.new(191, 45, -1401),
+    AutoThief = Vector3.new(63, 46, -319),
+    AutoFireBoar = Vector3.new(-80, 45, -1781),
+    AutoGolem = Vector3.new(-919, 45, -2553),
+    AutoSGolem = Vector3.new(-4934, 13, -1926),
+    AutoWitchQueen = Vector3.new(-4748, 44, -1981),
+    Golem = Vector3.new(-919, 45, -2553),
+["Security Golem"] = Vector3.new(-4934, 13, -1926),
+}
+
+local function GetHRP()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    return char:FindFirstChild("HumanoidRootPart")
+end
+
+local function PreloadTeleport(flagName)
+    local pos = NPC_Locations[flagName]
+    if not pos then return end
+
+    local hrp = GetHRP()
+    if not hrp then return end
+
+    hrp.CFrame = CFrame.new(pos + Vector3.new(0, 0, 0))
+    task.wait(0.7)
+end
+
+local function GetEnemies()
+    return workspace:FindFirstChild("Enemies")
+end
+
+local function Teleport(pos)
+    local hrp = GetHRP()
+    if hrp then
+        hrp.CFrame = CFrame.new(pos)
+    end
+end
+
+local function WaitDead(npc)
+    local hum = npc:FindFirstChildOfClass("Humanoid")
+
+    while npc and npc.Parent and hum and hum.Health > 0 do
+        task.wait(0.2)
+    end
+end
+
+--// Toggle Creator
+local function CreateToggle(name, flag, npcName)
+    AutoFarmTab:CreateToggle({
+        Name = name,
+        CurrentValue = false,
+        Flag = flag,
+        Callback = function(Value)
+            Flags[flag] = Value
+
+            if Value then
+                task.spawn(function()
+                    PreloadTeleport(flag)
+                    if Flags[flag] then
+                        AutoFarmLoop(flag, npcName)
+                    end
+                end)
+            end
+
+            if AnyFarmEnabled() then
+                StartAutoAttack()
+            else
+                StopAutoAttack()
+            end
+        end
+    })
+end
+
+--// Toggles
+CreateToggle("Auto Fire Boar", "AutoFireBoar", "Fire Boar")
+CreateToggle("Auto Slime", "AutoSlime", "Slime")
+CreateToggle("Auto Thief", "AutoThief", "Thief")
+CreateToggle("Auto Licht", "AutoLicht", "Licht")
+CreateToggle("Auto Golem", "AutoGolem", "Golem")
+CreateToggle("Auto SGolem", "AutoSGolem", "Security Golem")
+CreateToggle("Auto Witch Queen", "AutoWitchQueen", "Witch Queen")
+
+--// Teleport System
+local function TeleportToNPC(npc)
+    local char = GetCharacter()
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local targetPart = npc and GetRootPart(npc)
+    if not targetPart then return end
+
+    hrp.CFrame = targetPart.CFrame * CFrame.new(0, 3, 0)
+end
+
+local NPCList = {
+    "Asta","Chef Jack","Chris","DFiveX","Davrqwy","Father Orfi",
+    "Fuegoleon Vermillion","Jason","Joe (Dungeon Entrance)","Joe (Fields)",
+    "Joe (Forest)","Joe (Golems)","Joe (Grimoire Tower)","Joe (Magical Forest)",
+    "Joe (Thieves)","Joe (Village)","Joe (Volcano Zone)","Johnny","Larissa",
+    "Mereoleona Vermillion","Nieve Glacien","Noelle","Patolli","Renna",
+    "Sister Nini","Soda (Grimoire Storage)","Wizard Beerus (Open Tower)",
+    "Wizard Kurus","Wizard Lirus (Remove Grimoire)","Yuno"
+}
+
+for _, name in ipairs(NPCList) do
+    TeleportTab:CreateButton({
+        Name = name,
+        Callback = function()
+            local npcFolder = workspace:FindFirstChild("NPCs")
+            if not npcFolder then return end
+
+            local npc = npcFolder:FindFirstChild(name)
+            TeleportToNPC(npc)
+        end
+    })
+end
+
+--// Sell Golem Core Loop
+local function SellGolemCoreLoop()
+    if ActiveLoops["SellGolemCore"] then return end
+
+    ActiveLoops["SellGolemCore"] = task.spawn(function()
+        while Flags.SellGolemCore do
+            local stats = LocalPlayer:FindFirstChild("stats")
+            local inventory = stats and stats:FindFirstChild("Inventory")
+            local core = inventory and inventory:FindFirstChild("GolemCore")
+
+            if core then
+                MainRemote:FireServer("selle", core)
+                task.wait(0.4)
+            else
+                task.wait(1.5)
+            end
+        end
+
+        ActiveLoops["SellGolemCore"] = nil
+    end)
+end
+
+MiscTab:CreateToggle({
+    Name = "Sell Golem Core",
+    CurrentValue = false,
+    Flag = "SellGolemCore",
+    Callback = function(Value)
+        Flags.SellGolemCore = Value
+        if Value then SellGolemCoreLoop() end
+    end
+})end
 
 
 ---
